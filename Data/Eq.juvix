@@ -1,0 +1,36 @@
+module Data.Eq;
+
+open import Stdlib.Prelude;
+
+import Data.Ord as Ord;
+open Ord using {Ord};
+
+--- A trait defining equality
+type Eq (A : Type) :=
+  | eq : (A -> A -> Bool) -> Eq A;
+
+ord : {A : Type} -> Ord A -> Eq A;
+ord := eq ∘ Ord.eq;
+
+nat : Eq Nat;
+nat := ord Ord.nat;
+
+int : Eq Int;
+int := ord Ord.int;
+
+pair : {A B : Type} -> Eq A -> Eq B -> Eq (A × B);
+pair (eq eq-a) (eq eq-b) :=
+  eq
+    λ {
+      | (a1, b1) (a2, b2) := eq-a a1 a2 && eq-b b1 b2
+    };
+
+list : {A : Type} -> Eq A -> Eq (List A);
+list {A} (eq eq-a) :=
+  let
+    go : List A -> List A -> Bool;
+    go nil nil := true;
+    go nil _ := false;
+    go _ nil := false;
+    go (x :: xs) (y :: ys) := if (eq-a x y) (go xs ys) false;
+  in eq go;

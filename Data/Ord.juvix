@@ -1,0 +1,66 @@
+module Data.Ord;
+
+open import Stdlib.Prelude;
+open import Stdlib.Data.Ord;
+
+import Stdlib.Data.Nat.Ord as Nat;
+import Stdlib.Data.Int.Ord as Int;
+
+--- A trait for defining a totally order
+type Ord (A : Type) :=
+  | ord : (A -> A -> Ordering) -> Ord A;
+
+eq : {A : Type} -> Ord A -> A -> A -> Bool;
+eq (ord cmp) a1 a2 := isEQ (cmp a1 a2);
+
+lt : {A : Type} -> Ord A -> A -> A -> Bool;
+lt (ord cmp) a1 a2 := isLT (cmp a1 a2);
+
+leq : {A : Type} -> Ord A -> A -> A -> Bool;
+leq (ord cmp) a1 a2 :=
+  let
+    o : Ordering;
+    o := cmp a1 a2;
+  in isLT o || isEQ o;
+
+gt : {A : Type} -> Ord A -> A -> A -> Bool;
+gt (ord cmp) a1 a2 := isGT (cmp a1 a2);
+
+geq : {A : Type} -> Ord A -> A -> A -> Bool;
+geq (ord cmp) a1 a2 :=
+  let
+    o : Ordering;
+    o := cmp a1 a2;
+  in isGT o || isEQ o;
+
+nat : Ord Nat;
+nat := ord Nat.compare;
+
+int : Ord Int;
+int := ord Int.compare;
+
+pair :
+  {A B : Type} -> Ord A -> Ord B -> Ord (A × B);
+pair (ord cmp-a) (ord cmp-b) :=
+  ord
+    λ {
+      | (a1, b1) (a2, b2) :=
+        case cmp-a a1 a2
+          | LT := LT
+          | GT := GT
+          | EQ := cmp-b b1 b2
+    };
+
+list : {A : Type} -> Ord A -> Ord (List A);
+list {A} (ord cmp-a) :=
+  let
+    go : List A -> List A -> Ordering;
+    go nil nil := EQ;
+    go nil _ := LT;
+    go _ nil := GT;
+    go (x :: xs) (y :: ys) :=
+      case cmp-a x y
+        | LT := LT
+        | GT := GT
+        | EQ := go xs ys;
+  in ord go;

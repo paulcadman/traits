@@ -1,0 +1,35 @@
+module Data.Show;
+
+open import Stdlib.Prelude;
+
+type Show (A : Type) :=
+  | show : (A -> String) -> Show A;
+
+nat : Show Nat;
+nat := show natToString;
+
+int : Show Int;
+int := show intToString;
+
+bool : Show Bool;
+bool :=
+  show
+    λ {
+      | true := "true"
+      | false := "false"
+    };
+
+string : Show String;
+string :=
+  let
+    go : String -> String;
+    go s := "\"" ++str s ++str "\"";
+  in show go;
+
+list : {A : Type} -> Show A -> Show (List A);
+list {A} (show to-str) :=
+  let
+    go : List A -> String;
+    go nil := "nil";
+    go (x :: xs) := to-str x ++str " :: " ++str go xs;
+  in show go;
